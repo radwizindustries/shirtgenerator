@@ -27,8 +27,9 @@ export default async function handler(req, res) {
           prompt,
           width: 512,
           height: 512,
-          num_inference_steps: 30,
-          guidance_scale: 7.5
+          num_inference_steps: 25,
+          guidance_scale: 7.5,
+          scheduler: "K_EULER",
         },
       }
     );

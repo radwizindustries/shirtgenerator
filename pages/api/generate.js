@@ -1,7 +1,9 @@
 import Replicate from "replicate";
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
   const { prompt } = req.body;
 
@@ -19,10 +21,4 @@ export default async function handler(req, res) {
 
   try {
     const output = await replicate.run(
-      "stability-ai/stable-diffusion",
-      {
-        input: { prompt },
-      }
-    );
-
-    if (!output
+      "stability-ai/stable

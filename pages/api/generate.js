@@ -21,10 +21,15 @@ export default async function handler(req, res) {
 
   try {
     const output = await replicate.run(
-     "stability-ai/stable-diffusion:db21e45e2c50842f8d7f3581b9c2a44fae9053b4",
-
+      "stability-ai/stable-diffusion:db21e45e2c50842f8d7f3581b9c2a44fae9053b4",
       {
-        input: { prompt },
+        input: {
+          prompt,
+          width: 512,
+          height: 512,
+          num_inference_steps: 30,
+          guidance_scale: 7.5
+        },
       }
     );
 

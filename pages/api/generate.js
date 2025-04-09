@@ -15,10 +15,27 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Missing Replicate API token" });
   }
 
-  const output = await replicate.run(
-    "stability-ai/stable-diffusion",
-    {
-      input: { prompt },
+  const replicate = new Replicate({
+    auth: process.env.REPLICATE_API_TOKEN,
+  });
+
+  try {
+    const output = await replicate.run(
+      "stability-ai/stable-diffusion",
+      {
+        input: { prompt },
+      }
+    );
+
+    if (!output || !Array.isArray(output) || !output[0]) {
+      throw new Error("Replicate returned no output image");
     }
-  );
-  
+
+    res.status(200).json({ imageUrl: output[0] });
+  } catch (error) {
+    console.error("Replicate error:", error);
+    res.status(500).json({
+      error: error?.message || "Failed to generate image",
+    });
+  }
+}

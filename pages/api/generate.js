@@ -15,10 +15,10 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Missing Replicate API token" });
   }
 
-  const replicate = new Replicate({
-    auth: process.env.REPLICATE_API_TOKEN,
-  });
-
-  try {
-    const output = await replicate.run(
-      "stability-ai/stable
+  const output = await replicate.run(
+    "stability-ai/stable-diffusion",
+    {
+      input: { prompt },
+    }
+  );
+  

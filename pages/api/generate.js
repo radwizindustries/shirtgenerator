@@ -21,7 +21,7 @@ export default async function handler(req, res) {
 
   try {
     const output = await replicate.run(
-      "stability-ai/stable-diffusion:db21e45e2c50842f8d7f3581b9c2a44fae9053b4",
+      "stability-ai/stable-diffusion:27b93a2413e7f36cd83da926f3656280b2931564ff050bf9575f1fdf9bcd7478",
       {
         input: {
           prompt,
@@ -29,7 +29,7 @@ export default async function handler(req, res) {
           height: 512,
           num_inference_steps: 25,
           guidance_scale: 7.5,
-          scheduler: "K_EULER",
+          scheduler: "K_EULER"
         },
       }
     );

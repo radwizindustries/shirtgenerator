@@ -1,64 +1,106 @@
-
 import React, { useState } from "react";
-import { Input } from "../components/ui/input";
-import { Button } from "../components/ui/button";
-import { Card, CardContent } from "../components/ui/card";
 
+const shirtColors = ["white", "black", "red", "blue", "green"];
+const shirtSizes = ["S", "M", "L", "XL", "XXL"];
 
-export default function Home() {
+export default function HomePage() {
   const [prompt, setPrompt] = useState("");
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [shirtColor, setShirtColor] = useState("white");
+  const [shirtSize, setShirtSize] = useState("M");
 
   const generateImage = async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/generate", {
+      const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
       });
-      const data = await response.json();
+      const data = await res.json();
       setImage(data.imageUrl);
-    } catch (error) {
-      console.error("Error generating image:", error);
+    } catch (err) {
+      console.error("Error generating image:", err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 to-black text-white flex flex-col items-center justify-center p-6 space-y-8">
-      <h1 className="text-4xl font-bold text-purple-300">AI T-Shirt Generator</h1>
-      <p className="text-lg text-purple-100 max-w-xl text-center">
-        Enter a prompt below to generate a custom AI artwork and preview it on a t-shirt design.
-      </p>
-      <div className="w-full max-w-xl space-y-4">
-        <Input
-          className="text-black"
-          placeholder="Describe your t-shirt design..."
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-        />
-        <Button
-          onClick={generateImage}
-          disabled={loading || !prompt}
-          className="w-full bg-purple-700 hover:bg-purple-600"
-        >
-          {loading ? "Generating..." : "Generate Image"}
-        </Button>
-      </div>
-      {image && (
-        <Card className="mt-10 p-4 bg-black border border-purple-800">
-          <CardContent className="flex flex-col items-center">
-            <p className="mb-4 text-purple-200">Preview:</p>
-            <div className="w-64 h-64 bg-white rounded-xl flex items-center justify-center overflow-hidden">
-              <img src={image} alt="AI Generated Design" className="object-cover" />
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 to-black text-white p-6">
+      <header className="text-center mb-12">
+        <h1 className="text-5xl font-bold text-purple-300 mb-4">AI Shirt Studio</h1>
+        <p className="text-lg text-purple-100">
+          Create a custom t-shirt with your own AI-generated art!
+        </p>
+      </header>
+
+      <main className="max-w-4xl mx-auto bg-black bg-opacity-40 p-8 rounded-xl shadow-lg">
+        <div className="space-y-4">
+          <input
+            type="text"
+            placeholder="Describe your shirt design..."
+            className="w-full p-3 rounded text-black"
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+          />
+          <button
+            onClick={generateImage}
+            disabled={!prompt || loading}
+            className="w-full py-3 bg-purple-700 hover:bg-purple-600 rounded font-bold"
+          >
+            {loading ? "Generating..." : "Generate Design"}
+          </button>
+
+          {loading && (
+            <p className="text-purple-200 text-center animate-pulse">Generating your design, hang tight...</p>
+          )}
+
+          {image && (
+            <div className="mt-8 flex flex-col items-center">
+              <div className={`w-72 h-72 bg-${shirtColor} rounded-xl flex items-center justify-center overflow-hidden border border-purple-600`}>
+                <img src={image} alt="Generated shirt design" className="object-contain w-full h-full" />
+              </div>
+
+              <div className="mt-4 flex gap-4 items-center">
+                <label>Color:</label>
+                <select
+                  className="text-black rounded p-2"
+                  value={shirtColor}
+                  onChange={(e) => setShirtColor(e.target.value)}
+                >
+                  {shirtColors.map((color) => (
+                    <option key={color} value={color}>{color}</option>
+                  ))}
+                </select>
+
+                <label>Size:</label>
+                <select
+                  className="text-black rounded p-2"
+                  value={shirtSize}
+                  onChange={(e) => setShirtSize(e.target.value)}
+                >
+                  {shirtSizes.map((size) => (
+                    <option key={size} value={size}>{size}</option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                className="mt-6 bg-green-500 hover:bg-green-400 text-white font-bold py-3 px-6 rounded"
+                onClick={() => alert("Buy flow coming soon!")}
+              >
+                Buy This Shirt
+              </button>
             </div>
-            <p className="mt-4 text-purple-100">Your design on a t-shirt!</p>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </div>
+      </main>
+
+      <footer className="text-center text-purple-300 mt-16">
+        <p>&copy; 2025 AI Shirt Studio. All rights reserved.</p>
+      </footer>
     </div>
   );
 }

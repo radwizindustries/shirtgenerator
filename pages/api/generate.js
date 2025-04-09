@@ -1,10 +1,17 @@
-
 import Replicate from "replicate";
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   const { prompt } = req.body;
+
+  if (!prompt || typeof prompt !== "string") {
+    return res.status(400).json({ error: "Prompt is required and must be a string" });
+  }
+
+  if (!process.env.REPLICATE_API_TOKEN) {
+    return res.status(500).json({ error: "Missing Replicate API token" });
+  }
 
   const replicate = new Replicate({
     auth: process.env.REPLICATE_API_TOKEN,
@@ -12,14 +19,10 @@ export default async function handler(req, res) {
 
   try {
     const output = await replicate.run(
-      "stability-ai/stable-diffusion:db21e45e2c50842f8d7f3581b9c2a44fae9053b4",
+      "stability-ai/stable-diffusion",
       {
         input: { prompt },
       }
     );
 
-    res.status(200).json({ imageUrl: output[0] });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to generate image" });
-  }
-}
+    if (!output

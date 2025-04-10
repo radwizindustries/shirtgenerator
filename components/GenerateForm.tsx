@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { generateImage } from "@/lib/generateImage"
-import { saveGeneratedShirt } from "@/lib/saveGeneratedShirt"
+import { generateImage } from "../lib/generateImage"
+import { saveGeneratedShirt } from "../lib/saveGeneratedShirt"
 
 export default function GenerateForm() {
   const [prompt, setPrompt] = useState("")

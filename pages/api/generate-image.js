@@ -1,7 +1,6 @@
-// /pages/api/generate-image.ts
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method Not Allowed" });
+    return res.status(405).end("Method Not Allowed");
   }
 
   const { prompt } = req.body;
@@ -18,24 +17,20 @@ export default async function handler(req, res) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "dall-e-3", // Make sure you're using DALL·E 3
         prompt,
         n: 1,
-        size: "1024x1024", // High-quality size
-        response_format: "url",
+        size: "1024x1024", // You can change this if needed
       }),
     });
 
     const json = await openaiRes.json();
 
     if (!openaiRes.ok) {
-      console.error("OpenAI error:", json);
-      return res.status(500).json({ error: json.error?.message || "Failed to generate image" });
+      return res.status(500).json({ error: json.error.message || "Failed to generate image" });
     }
 
     return res.status(200).json({ imageUrl: json.data[0].url });
   } catch (error) {
-    console.error("Server error:", error);
     return res.status(500).json({ error: "Server error" });
   }
 }

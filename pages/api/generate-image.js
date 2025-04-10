@@ -19,8 +19,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         prompt,
         n: 1,
-        size: "512x512"
-", // You can change this if needed
+        size: "512x512", // You can change this if needed
       }),
     });
 

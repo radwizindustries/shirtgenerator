@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { generateImage } from "@/lib/generateImage";
+import { generateImage } from "../lib/generateImage";
 import { saveGeneratedShirt } from "../lib/saveGeneratedShirt"
 
 export default function GenerateForm() {

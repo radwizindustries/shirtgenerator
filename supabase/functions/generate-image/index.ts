@@ -1,20 +1,32 @@
 // supabase/functions/generate-image/index.ts
 
+console.log("✅ Supabase function ready");
+
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("OK", {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+    });
+  }
+
   try {
     const { prompt } = await req.json();
 
     if (!prompt) {
       return new Response(JSON.stringify({ error: "Prompt is required" }), {
         status: 400,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Access-Control-Allow-Origin": "*" },
       });
     }
 
     const openaiRes = await fetch("https://api.openai.com/v1/images/generations", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${Deno.env.get("OPENAI_API_KEY")}`,
+        "Authorization": `Bearer ${Deno.env.get("OPENAI_API_KEY")}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -24,26 +36,24 @@ Deno.serve(async (req) => {
       }),
     });
 
-    const json = await openaiRes.json();
+    const data = await openaiRes.json();
 
     if (!openaiRes.ok) {
-      return new Response(JSON.stringify({ error: json.error.message || "Image generation failed" }), {
+      return new Response(JSON.stringify({ error: data.error?.message || "Failed to generate" }), {
         status: 500,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Access-Control-Allow-Origin": "*" },
       });
     }
 
-    return new Response(JSON.stringify({ imageUrl: json.data[0].url }), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*", // Allow browser access
-      },
+    return new Response(JSON.stringify({ imageUrl: data.data[0].url }), {
+      headers: { "Access-Control-Allow-Origin": "*" },
     });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: "Unexpected error generating image" }), {
+
+  } catch (error) {
+    console.error("Error:", error);
+    return new Response(JSON.stringify({ error: "Internal Server Error" }), {
       status: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Access-Control-Allow-Origin": "*" },
     });
   }
 });

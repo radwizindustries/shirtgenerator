@@ -15,8 +15,8 @@ export default function Home() {
     setImageUrl(null);
 
     try {
-      const res = await fetch("/api/generate-image", {
-        method: "POST",
+      const image = await generateImage(prompt);
+      method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
       });

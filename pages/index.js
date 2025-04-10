@@ -15,7 +15,7 @@ export default function Home() {
     setImageUrl(null);
 
     try {
-      const res = await fetch("https://nxbobmzmxnrkeakjelnd.supabase.co/functions/v1/generate-image", {
+      const res = await fetch("/api/generate-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),

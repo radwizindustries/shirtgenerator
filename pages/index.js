@@ -105,10 +105,19 @@ export default function Home() {
 
         {error && <p className="text-red-400 mt-4">{error}</p>}
 
-        {imageUrl && (
-          <div className="mt-8">
-            <p className="mb-2 text-purple-200">Here’s your design:</p>
-            <img
-              src={imageUrl}
-              alt="Generated shirt design"
-              class
+        {error && <p className="text-red-400 mt-4">{error}</p>}
+
+{imageUrl && (
+  <div className="mt-8">
+    <p className="mb-2 text-purple-200">Here’s your design:</p>
+    <img
+      src={imageUrl}
+      alt="Generated shirt design"
+      className="mx-auto rounded-lg shadow-lg"
+    />
+  </div>
+)}
+</div>
+</div>
+);
+}

@@ -15,7 +15,7 @@ export default function Home() {
 
     try {
       // Step 1: Call Supabase Edge Function to generate image
-      const res = await fetch("https://YOUR_PROJECT_ID.supabase.co/functions/v1/generate-image", {
+      const res = await fetch("https://nxbobmzmxnrkeakjelnd.supabase.co/functions/v1/generate-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
@@ -91,3 +91,24 @@ export default function Home() {
             <option value="S">S</option>
             <option value="M">M</option>
             <option value="L">L</option>
+            <option value="XL">XL</option>
+          </select>
+        </div>
+
+        <button
+          onClick={generateImage}
+          disabled={loading || !prompt}
+          className="bg-purple-600 hover:bg-purple-500 font-bold py-3 px-6 rounded disabled:opacity-50"
+        >
+          {loading ? "Generating..." : "Generate Design"}
+        </button>
+
+        {error && <p className="text-red-400 mt-4">{error}</p>}
+
+        {imageUrl && (
+          <div className="mt-8">
+            <p className="mb-2 text-purple-200">Here’s your design:</p>
+            <img
+              src={imageUrl}
+              alt="Generated shirt design"
+              class

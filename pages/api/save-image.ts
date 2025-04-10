@@ -28,7 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const buffer = await imageRes.arrayBuffer()
     const fileName = `${uuidv4()}.png`
 
-    const { data: storageData, error: storageError } = await supabase.storage
+    const { error: storageError } = await supabase.storage
       .from('shirt-gallery')
       .upload(fileName, buffer, {
         contentType: 'image/png',

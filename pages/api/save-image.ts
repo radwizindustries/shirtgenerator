@@ -20,6 +20,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const imageRes = await fetch(imageUrl)
+    if (!imageRes.ok) {
+      const text = await imageRes.text()
+      return res.status(500).json({ error: `Failed to fetch image: ${text}` })
+    }
+
     const buffer = await imageRes.arrayBuffer()
     const fileName = `${uuidv4()}.png`
 
@@ -31,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
 
     if (storageError) {
-      throw storageError
+      return res.status(500).json({ error: `Storage upload failed: ${storageError.message}` })
     }
 
     const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/shirt-gallery/${fileName}`
@@ -47,12 +52,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     ])
 
     if (insertError) {
-      throw insertError
+      return res.status(500).json({ error: `Database insert failed: ${insertError.message}` })
     }
 
     return res.status(200).json({ url: publicUrl })
-  } catch (err) {
-    console.error(err)
-    return res.status(500).json({ error: 'Image save failed' })
+  } catch (err: any) {
+    console.error('Unexpected error:', err)
+    return res.status(500).json({ error: 'Unexpected error occurred' })
   }
 }

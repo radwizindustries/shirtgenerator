@@ -1,6 +1,6 @@
 export async function generateImage(prompt: string): Promise<string | null> {
   try {
-    const res = await fetch("/api/generate-image", {
+    const res = await fetch("https://nxbobmzmxnrkeakjelnd.supabase.co/functions/v1/generate-image", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -11,7 +11,7 @@ export async function generateImage(prompt: string): Promise<string | null> {
     const json = await res.json();
 
     if (!res.ok) {
-      console.error("Image generation failed:", json.error);
+      console.error("Supabase function error:", json.error);
       return null;
     }
 

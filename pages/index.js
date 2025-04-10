@@ -1,5 +1,7 @@
 import { useState } from "react";
 import Head from "next/head";
+import { generateImage } from "../lib/generateImage"; // ✅ use relative path
+import { saveGeneratedShirt } from "../lib/saveGeneratedShirt";
 
 export default function Home() {
   const [prompt, setPrompt] = useState("");
@@ -9,44 +11,30 @@ export default function Home() {
   const [shirtColor, setShirtColor] = useState("white");
   const [size, setSize] = useState("M");
 
-  const generateImage = async () => {
+  const handleGenerate = async () => {
     setLoading(true);
     setError(null);
     setImageUrl(null);
 
     try {
-      const image = await generateImage(prompt);
-      method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
-      });
+      const generatedUrl = await generateImage(prompt);
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Something went wrong generating the image");
+      if (!generatedUrl) {
+        throw new Error("Image generation failed");
       }
 
-      const generatedUrl = data.imageUrl;
-
-      const saveRes = await fetch("/api/save-image", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          imageUrl: generatedUrl,
-          prompt,
-          shirtColor,
-          size,
-        }),
+      const saveRes = await saveGeneratedShirt({
+        imageUrl: generatedUrl,
+        prompt,
+        shirtColor,
+        size,
       });
 
-      const saveData = await saveRes.json();
-
-      if (!saveRes.ok) {
-        throw new Error(saveData.error || "Failed to save image");
+      if (!saveRes) {
+        throw new Error("Failed to save image");
       }
 
-      setImageUrl(saveData.url);
+      setImageUrl(saveRes);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -104,7 +92,7 @@ export default function Home() {
           </div>
 
           <button
-            onClick={generateImage}
+            onClick={handleGenerate}
             disabled={loading || !prompt}
             className="bg-purple-600 hover:bg-purple-500 font-bold py-3 px-6 rounded disabled:opacity-50"
           >

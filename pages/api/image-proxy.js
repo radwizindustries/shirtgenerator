@@ -12,32 +12,8 @@ export default async function handler(req, res) {
   try {
     // Check if it's a DALL-E URL
     if (url.includes('oaidalleapiprodscus.blob.core.windows.net')) {
-      // For DALL-E URLs, proxy the request with authentication
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-      });
-      
-      if (!response.ok) {
-        console.error('DALL-E image proxy error:', {
-          status: response.status,
-          statusText: response.statusText,
-          url: url
-        });
-        throw new Error(`Failed to fetch DALL-E image: ${response.statusText}`);
-      }
-
-      // Get the image data
-      const imageBuffer = await response.arrayBuffer();
-      
-      // Set appropriate headers
-      res.setHeader('Content-Type', response.headers.get('Content-Type') || 'image/png');
-      res.setHeader('Cache-Control', 'public, max-age=31536000');
-      
-      // Send the image data
-      return res.send(Buffer.from(imageBuffer));
+      // For DALL-E URLs, redirect to the original URL
+      return res.redirect(url);
     }
 
     // For other URLs, proxy the request
@@ -52,14 +28,16 @@ export default async function handler(req, res) {
     }
 
     // Get the image data
-    const imageBuffer = await response.arrayBuffer();
+    const contentType = response.headers.get('content-type') || 'image/png';
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
     // Set appropriate headers
-    res.setHeader('Content-Type', response.headers.get('Content-Type') || 'image/png');
+    res.setHeader('Content-Type', contentType);
     res.setHeader('Cache-Control', 'public, max-age=31536000');
     
     // Send the image data
-    res.send(Buffer.from(imageBuffer));
+    res.send(buffer);
   } catch (error) {
     console.error('Error proxying image:', error);
     res.status(500).json({ error: error.message });

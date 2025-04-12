@@ -33,10 +33,10 @@ export default async function handler(req, res) {
 
     if (req.method === 'GET') {
       // Get template information
-      const templateId = 'b5e1480a-7608-4622-8248-efc8ae633a4e'; // T-shirt template ID
+      const templateId = '5fc7cef1-8fd3-4361-855f-59f41a83cd57'; // T-shirt template ID
       const response = await fetch(`${GELATO_API_URL}/templates/${templateId}`, {
         headers: {
-          'Authorization': `Bearer ${GELATO_API_KEY}`,
+          'X-API-KEY': GELATO_API_KEY,
           'Content-Type': 'application/json'
         }
       });
@@ -60,7 +60,7 @@ export default async function handler(req, res) {
     const templateId = '5fc7cef1-8fd3-4361-855f-59f41a83cd57'; // T-shirt template ID
     const templateResponse = await fetch(`${GELATO_API_URL}/templates/${templateId}`, {
       headers: {
-        'Authorization': `Bearer ${GELATO_API_KEY}`,
+        'X-API-KEY': GELATO_API_KEY,
         'Content-Type': 'application/json'
       }
     });
@@ -76,7 +76,7 @@ export default async function handler(req, res) {
     const productResponse = await fetch(`${GELATO_API_URL}/products`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${GELATO_API_KEY}`,
+        'X-API-KEY': GELATO_API_KEY,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({

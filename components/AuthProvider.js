@@ -50,7 +50,12 @@ export const AuthProvider = ({ children }) => {
           }
         }
       })
-      if (error) throw error
+      
+      if (error) {
+        console.error('Sign up error:', error)
+        return { data: null, error }
+      }
+      
       return { data, error: null }
     } catch (error) {
       console.error('Sign up error:', error)

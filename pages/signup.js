@@ -27,11 +27,13 @@ export default function SignUp() {
     console.log('Form submitted:', { email: formData.email });
 
     try {
-      const response = await signUp(formData.email, formData.password, formData.username);
-      if (response.error) {
-        throw response.error;
+      const { data, error } = await signUp(formData.email, formData.password, formData.username);
+      
+      if (error) {
+        throw error;
       }
-      if (response.data?.user) {
+      
+      if (data) {
         router.push('/');
       }
     } catch (err) {

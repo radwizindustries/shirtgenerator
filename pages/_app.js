@@ -1,7 +1,12 @@
-import '../styles/globals.css'; // ✅ this must be first
+import { AuthProvider } from '../components/AuthProvider'
+import '../styles/globals.css'
 
 function MyApp({ Component, pageProps }) {
-  return <Component {...pageProps} />;
+  return (
+    <AuthProvider>
+      <Component {...pageProps} />
+    </AuthProvider>
+  )
 }
 
-export default MyApp;
+export default MyApp

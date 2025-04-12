@@ -3,7 +3,14 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
-const AuthContext = createContext({})
+// Create the context with a default value
+const AuthContext = createContext({
+  user: null,
+  loading: true,
+  signIn: async () => ({ data: null, error: null }),
+  signUp: async () => ({ data: null, error: null }),
+  signOut: async () => {},
+})
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)

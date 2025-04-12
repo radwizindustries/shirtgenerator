@@ -44,10 +44,10 @@ export default async function handler(req, res) {
     }
 
     // Verify the session using the token
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-    if (userError || !user) {
-      console.error('User error:', userError);
-      return res.status(401).json({ error: 'Invalid token' });
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session) {
+      console.error('Session error:', sessionError);
+      return res.status(401).json({ error: 'Invalid session' });
     }
 
     if (req.method === 'GET') {
@@ -55,7 +55,7 @@ export default async function handler(req, res) {
       const { count, error } = await supabase
         .from('user_generations')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
+        .eq('user_id', session.user.id);
 
       if (error) {
         console.error('Error fetching generation count:', error);
@@ -103,7 +103,7 @@ export default async function handler(req, res) {
       .from('user_generations')
       .insert([
         {
-          user_id: user.id,
+          user_id: session.user.id,
           prompt: prompt,
           image_url: imageUrl
         }
@@ -119,7 +119,7 @@ export default async function handler(req, res) {
       .from('shirt_designs')
       .insert([
         {
-          user_id: user.id,
+          user_id: session.user.id,
           prompt: prompt,
           image_url: imageUrl,
           created_at: new Date().toISOString()

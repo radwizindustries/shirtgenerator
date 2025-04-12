@@ -32,10 +32,10 @@ export const AuthProvider = ({ children }) => {
         password,
       })
       if (error) throw error
-      return data
+      return { data, error: null }
     } catch (error) {
       console.error('Sign in error:', error)
-      throw error
+      return { data: null, error }
     }
   }
 
@@ -51,10 +51,10 @@ export const AuthProvider = ({ children }) => {
         }
       })
       if (error) throw error
-      return data
+      return { data, error: null }
     } catch (error) {
       console.error('Sign up error:', error)
-      throw error
+      return { data: null, error }
     }
   }
 

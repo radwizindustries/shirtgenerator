@@ -12,8 +12,19 @@ export default async function handler(req, res) {
   try {
     // Check if it's a DALL-E URL
     if (url.includes('oaidalleapiprodscus.blob.core.windows.net')) {
-      // For DALL-E URLs, redirect to the original URL
-      return res.redirect(url);
+      // For DALL-E URLs, use the SAS token directly
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch DALL-E image: ${response.statusText}`);
+      }
+
+      const contentType = response.headers.get('content-type');
+      const buffer = await response.buffer();
+
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'public, max-age=31536000');
+      res.send(buffer);
+      return;
     }
 
     // For other URLs, proxy the request

@@ -297,20 +297,54 @@ export default function Home() {
           {/* Results Section */}
           {(isGenerating || imageUrl) && (
             <div className="mt-8">
-              {/* Generated Design */}
-              <div className="text-center">
-                <h3 className="text-xl font-semibold mb-4">Generated Design</h3>
-                {isGenerating ? (
-                  <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center animate-pulse">
-                    <p className="text-gray-500">Generating...</p>
-                  </div>
-                ) : imageUrl ? (
-                  <img
-                    src={imageUrl}
-                    alt={prompt || 'Generated design'}
-                    className="w-full rounded-lg shadow-lg object-contain h-96"
-                  />
-                ) : null}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Generated Design */}
+                <div className="text-center">
+                  <h3 className="text-xl font-semibold mb-4">Generated Design</h3>
+                  {isGenerating ? (
+                    <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center animate-pulse">
+                      <p className="text-gray-500">Generating...</p>
+                    </div>
+                  ) : imageUrl ? (
+                    <img
+                      src={imageUrl}
+                      alt={prompt || 'Generated design'}
+                      className="w-full rounded-lg shadow-lg object-contain h-96"
+                    />
+                  ) : null}
+                </div>
+
+                {/* Gelato Template Preview */}
+                <div className="text-center">
+                  <h3 className="text-xl font-semibold mb-4">Shirt Preview</h3>
+                  {isGenerating ? (
+                    <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center animate-pulse">
+                      <p className="text-gray-500">Loading preview...</p>
+                    </div>
+                  ) : imageUrl ? (
+                    <div className="relative">
+                      <img
+                        src={`/api/get-mockups?color=${encodeURIComponent(selectedColor.value)}`}
+                        alt="Shirt preview"
+                        className="w-full rounded-lg shadow-lg object-contain h-96"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <img
+                          src={imageUrl}
+                          alt="Design overlay"
+                          className="w-3/4 h-3/4 object-contain"
+                          style={{ 
+                            mixBlendMode: 'multiply',
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)'
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
               </div>
             </div>
           )}

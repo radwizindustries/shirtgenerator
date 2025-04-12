@@ -37,19 +37,21 @@ export default async function handler(req, res) {
 
     // Find the appropriate product variant based on color
     const targetColor = (color === '#FFFFFF' ? 'white' : 'black');
-    const variant = templates.result.find(v => 
-      v.variants.some(variant => 
-        variant.color.toLowerCase() === targetColor
+    const product = templates.result.find(product => 
+      product.variants && product.variants.some(variant => 
+        variant.color && variant.color.toLowerCase() === targetColor
       )
     );
 
-    if (!variant) {
-      console.error('Available variants:', templates.result);
-      throw new Error(`Variant not found for the selected color: ${targetColor}`);
+    if (!product) {
+      console.error('Available products:', templates.result);
+      throw new Error(`Product not found for the selected color: ${targetColor}`);
     }
 
+    const variant = product.variants.find(v => v.color.toLowerCase() === targetColor);
+
     // Create a product with the image
-    const productResponse = await fetch(`${PRINTFUL_API_URL}/store/products/${variant.id}/variants`, {
+    const productResponse = await fetch(`${PRINTFUL_API_URL}/store/products/${product.id}/variants`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.PRINTFUL_API_KEY}`,
@@ -62,7 +64,7 @@ export default async function handler(req, res) {
         },
         sync_variants: [
           {
-            variant_id: variant.variants[0].id,
+            variant_id: variant.id,
             retail_price: '29.99',
             files: [
               {
@@ -80,8 +82,8 @@ export default async function handler(req, res) {
       throw new Error(error.message || 'Failed to create product');
     }
 
-    const product = await productResponse.json();
-    console.log('Product created:', product);
+    const productCreated = await productResponse.json();
+    console.log('Product created:', productCreated);
 
     // Get mockups for the product
     const mockupResponse = await fetch(`${PRINTFUL_API_URL}/mockup-generator/create-task`, {
@@ -91,8 +93,8 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        product_id: variant.id,
-        variant_ids: [variant.variants[0].id],
+        product_id: product.id,
+        variant_ids: [variant.id],
         format: 'jpg',
         files: [
           {

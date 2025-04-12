@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 const GELATO_API_KEY = process.env.GELATO_API_KEY;
-const GELATO_API_URL = 'https://order.ie.live.gelato.tech/api/v2';
+const GELATO_API_URL = 'https://api.gelato.com/v2';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -34,9 +34,9 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       // Get template information
       const templateId = '5fc7cef1-8fd3-4361-855f-59f41a83cd57'; // Replace with your template ID
-      const response = await fetch(`${GELATO_API_URL}/ecommerce/templates/${templateId}`, {
+      const response = await fetch(`${GELATO_API_URL}/templates/${templateId}`, {
         headers: {
-          'Authorization': `Basic ${Buffer.from(`${GELATO_API_KEY}:`).toString('base64')}`,
+          'Authorization': `Bearer ${GELATO_API_KEY}`,
           'Content-Type': 'application/json'
         }
       });
@@ -58,9 +58,9 @@ export default async function handler(req, res) {
 
     // First, get template information
     const templateId = '5fc7cef1-8fd3-4361-855f-59f41a83cd57'; // Replace with your template ID
-    const templateResponse = await fetch(`${GELATO_API_URL}/ecommerce/templates/${templateId}`, {
+    const templateResponse = await fetch(`${GELATO_API_URL}/templates/${templateId}`, {
       headers: {
-        'Authorization': `Basic ${Buffer.from(`${GELATO_API_KEY}:`).toString('base64')}`,
+        'Authorization': `Bearer ${GELATO_API_KEY}`,
         'Content-Type': 'application/json'
       }
     });
@@ -73,10 +73,10 @@ export default async function handler(req, res) {
     const template = await templateResponse.json();
 
     // Create product using template
-    const productResponse = await fetch(`${GELATO_API_URL}/ecommerce/products`, {
+    const productResponse = await fetch(`${GELATO_API_URL}/products`, {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${Buffer.from(`${GELATO_API_KEY}:`).toString('base64')}`,
+        'Authorization': `Bearer ${GELATO_API_KEY}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({

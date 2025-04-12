@@ -17,7 +17,8 @@ export default function Login() {
 
   useEffect(() => {
     console.log('Login page mounted');
-  }, []);
+    console.log('Sign in function:', signIn);
+  }, [signIn]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,13 +27,15 @@ export default function Login() {
     console.log('Form submitted:', { email: formData.email });
 
     try {
-      const { data, error } = await signIn(formData.email, formData.password);
+      console.log('Calling signIn function');
+      const result = await signIn(formData.email, formData.password);
+      console.log('Sign in result:', result);
       
-      if (error) {
-        throw error;
+      if (result.error) {
+        throw result.error;
       }
       
-      if (data?.user) {
+      if (result.data?.user) {
         router.push('/');
       }
     } catch (err) {

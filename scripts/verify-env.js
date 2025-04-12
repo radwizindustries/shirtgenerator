@@ -12,7 +12,7 @@ const requiredVars = [
   'NEXT_PUBLIC_SUPABASE_ANON_KEY',
   'OPENAI_API_KEY',
   'REPLICATE_API_TOKEN',
-  'GELATO_API_KEY'
+  'PRINTFUL_API_KEY'
 ];
 
 // Check each required variable

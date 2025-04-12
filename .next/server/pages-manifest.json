@@ -3,5 +3,6 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/api/image-proxy": "pages/api/image-proxy.js",
+  "/api/get-mockups": "pages/api/get-mockups.js",
   "/": "pages/index.js"
 }

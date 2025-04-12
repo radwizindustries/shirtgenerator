@@ -93,8 +93,8 @@ export default function Home() {
       const { imageUrl } = await response.json();
       setImageUrl(imageUrl);
 
-      // Create product with Gelato
-      const gelatoResponse = await fetch('/api/gelato', {
+      // Create product with Printful
+      const printfulResponse = await fetch('/api/printful', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -106,17 +106,17 @@ export default function Home() {
         }),
       });
 
-      if (!gelatoResponse.ok) {
-        const error = await gelatoResponse.json();
+      if (!printfulResponse.ok) {
+        const error = await printfulResponse.json();
         throw new Error(error.error || 'Failed to create product');
       }
 
-      const { mockupUrl } = await gelatoResponse.json();
+      const { mockupUrl } = await printfulResponse.json();
       setImageUrl(mockupUrl);
 
       // Save to gallery
       const { error: saveError } = await supabase
-        .from('designs')
+        .from('shirt_designs')
         .insert([
           {
             user_id: session.user.id,

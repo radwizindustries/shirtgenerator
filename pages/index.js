@@ -264,14 +264,16 @@ export default function Home() {
                     alt={prompt || 'Generated design'}
                     className="w-full rounded-lg shadow-lg object-contain h-96"
                   />
-                ) : (
-                  <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <p className="text-gray-400">Design will appear here</p>
-                  </div>
-                )}
+                ) : null}
               </div>
             </div>
           )}
+
+          {/* Gallery Section */}
+          <div className="mt-16">
+            <h3 className="text-xl font-semibold mb-8">Recent Designs</h3>
+            <Gallery />
+          </div>
         </div>
 
         <div className="mt-16">

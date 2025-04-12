@@ -100,6 +100,23 @@ export default async function handler(req, res) {
       // Don't fail the request if saving fails, just log it
     }
 
+    // Also save to shirt_designs table for the gallery
+    const { error: designError } = await supabase
+      .from('shirt_designs')
+      .insert([
+        {
+          user_id: user.id,
+          prompt: prompt,
+          image_url: imageUrl,
+          created_at: new Date().toISOString()
+        }
+      ]);
+
+    if (designError) {
+      console.error('Error saving to gallery:', designError);
+      // Don't fail the request if saving fails, just log it
+    }
+
     res.status(200).json({ imageUrl });
   } catch (error) {
     console.error('Error in generate API:', error);

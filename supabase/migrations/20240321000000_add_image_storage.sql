@@ -3,6 +3,10 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('shirt_designs', 'shirt_designs', true)
 ON CONFLICT (id) DO NOTHING;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Allow authenticated users to upload images" ON storage.objects;
+DROP POLICY IF EXISTS "Allow public read access" ON storage.objects;
+
 -- Add storage policy to allow authenticated users to upload images
 CREATE POLICY "Allow authenticated users to upload images"
 ON storage.objects FOR INSERT TO authenticated

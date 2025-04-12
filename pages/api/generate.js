@@ -45,9 +45,14 @@ export default async function handler(req, res) {
 
     // Verify the session using the token
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session) {
+    if (sessionError) {
       console.error('Session error:', sessionError);
-      return res.status(401).json({ error: 'Invalid session' });
+      return res.status(401).json({ error: 'Session error' });
+    }
+
+    if (!session) {
+      console.error('No active session');
+      return res.status(401).json({ error: 'No active session' });
     }
 
     // Verify the token matches the session

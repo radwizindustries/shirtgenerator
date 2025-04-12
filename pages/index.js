@@ -108,6 +108,7 @@ export default function Home() {
         return;
       }
 
+      // Generate image with DALL-E
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: {
@@ -124,7 +125,30 @@ export default function Home() {
 
       const data = await response.json();
       setImageUrl(data.imageUrl);
-      setError(null); // Clear any previous errors
+      setError(null);
+
+      // Create Gelato product with mockups
+      const gelatoResponse = await fetch('/api/gelato', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          imageUrl: data.imageUrl,
+          prompt: prompt
+        }),
+      });
+
+      if (!gelatoResponse.ok) {
+        const errorData = await gelatoResponse.json();
+        console.error('Error creating Gelato product:', errorData);
+        // Don't throw error here, just log it
+      } else {
+        const gelatoData = await gelatoResponse.json();
+        console.log('Gelato product created:', gelatoData);
+      }
+
       await fetchGenerationCount();
     } catch (error) {
       console.error('Error generating image:', error);

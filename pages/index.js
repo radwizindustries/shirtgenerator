@@ -123,10 +123,16 @@ export default function Home() {
         data = await response.json();
       } catch (e) {
         console.error('Error parsing response:', e);
+        if (response.status === 504) {
+          throw new Error('The request took too long. Please try again with a simpler prompt.');
+        }
         throw new Error('Failed to parse server response');
       }
 
       if (!response.ok) {
+        if (response.status === 504) {
+          throw new Error('The request took too long. Please try again with a simpler prompt.');
+        }
         throw new Error(data.error || 'Failed to generate image');
       }
 

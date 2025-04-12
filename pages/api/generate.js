@@ -22,6 +22,10 @@ const openai = new OpenAI({
 
 // The main handler function for the API route
 export default async function handler(req, res) {
+  // Set a longer timeout for this route
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('Keep-Alive', 'timeout=60');
+
   // Handle both GET and POST requests
   if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -69,7 +73,14 @@ export default async function handler(req, res) {
 
     console.log(`Generating image with DALL-E 3 for prompt: "${prompt}"`);
 
-    const response = await openai.images.generate({
+    // Set a timeout for the OpenAI API call
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Request timed out. Please try again.'));
+      }, 30000); // 30 second timeout
+    });
+
+    const imagePromise = openai.images.generate({
       model: "dall-e-3",
       prompt: prompt,
       n: 1,
@@ -78,6 +89,9 @@ export default async function handler(req, res) {
       quality: "standard",
       style: "vivid",
     });
+
+    // Race between the timeout and the API call
+    const response = await Promise.race([imagePromise, timeoutPromise]);
 
     const imageUrl = response.data?.[0]?.url;
     if (!imageUrl) {
@@ -120,6 +134,10 @@ export default async function handler(req, res) {
     res.status(200).json({ imageUrl });
   } catch (error) {
     console.error('Error in generate API:', error);
+    
+    if (error.message === 'Request timed out. Please try again.') {
+      return res.status(504).json({ error: error.message });
+    }
     
     if (error instanceof OpenAI.APIError) {
       const statusCode = error.status || 500;

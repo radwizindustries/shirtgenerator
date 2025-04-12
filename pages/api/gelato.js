@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 const GELATO_API_URL = 'https://api.gelato.com/v2';
@@ -19,27 +19,6 @@ export default async function handler(req, res) {
     if (!process.env.GELATO_API_KEY) {
       throw new Error('Gelato API key not configured');
     }
-
-    // First, upload the image to Gelato
-    const imageResponse = await fetch(imageUrl);
-    const imageBuffer = await imageResponse.arrayBuffer();
-    
-    const uploadResponse = await fetch(`${GELATO_API_URL}/images`, {
-      method: 'POST',
-      headers: {
-        'X-API-KEY': process.env.GELATO_API_KEY,
-        'Content-Type': 'image/png',
-      },
-      body: Buffer.from(imageBuffer),
-    });
-
-    if (!uploadResponse.ok) {
-      const error = await uploadResponse.json();
-      throw new Error(error.message || 'Failed to upload image');
-    }
-
-    const { id: imageId } = await uploadResponse.json();
-    console.log('Image uploaded successfully:', imageId);
 
     // Get the template
     const templateResponse = await fetch(`${GELATO_API_URL}/templates/${TEMPLATE_ID}`, {
@@ -84,8 +63,8 @@ export default async function handler(req, res) {
         templateId: TEMPLATE_ID,
         variantId: variant.id,
         images: [{
-          layerId: 'front', // This should match the layer ID in your template
-          url: `https://api.gelato.com/v2/images/${imageId}`
+          url: imageUrl,
+          position: 'front'
         }]
       }),
     });

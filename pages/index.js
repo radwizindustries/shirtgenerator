@@ -270,9 +270,8 @@ export default function Home() {
                   <h3 className="text-xl font-semibold mb-4">Generated Design</h3>
                   <div className="flex-1 flex items-center justify-center">
                     {isGenerating ? (
-                      <div className="flex flex-col items-center gap-4">
-                        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                        <p className="text-white">Generating your design...</p>
+                      <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center animate-pulse">
+                        <p className="text-gray-500">Generating...</p>
                       </div>
                     ) : imageUrl ? (
                       <div className="relative w-full max-w-2xl mx-auto">
@@ -281,6 +280,12 @@ export default function Home() {
                           alt="Generated design"
                           className="w-full h-auto rounded-lg shadow-lg"
                         />
+                        {selectedColor && (
+                          <div
+                            className="absolute inset-0 mix-blend-multiply"
+                            style={{ backgroundColor: selectedColor }}
+                          />
+                        )}
                       </div>
                     ) : null}
                   </div>

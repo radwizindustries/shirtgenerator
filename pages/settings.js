@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react';
-import { useRouter } from 'next/router';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../components/AuthProvider';
 import Link from 'next/link';
 
@@ -16,6 +16,12 @@ export default function Settings() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/login');
+    }
+  }, [user, router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -52,7 +58,6 @@ export default function Settings() {
   };
 
   if (!user) {
-    router.push('/login');
     return null;
   }
 
@@ -101,22 +106,22 @@ export default function Settings() {
                   required
                 />
               </div>
-              {error && <p className="text-red-500">{error}</p>}
-              {success && <p className="text-green-500">Password updated successfully!</p>}
+              {error && <div className="text-red-500">{error}</div>}
+              {success && <div className="text-green-500">Password updated successfully!</div>}
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
               >
                 {loading ? 'Updating...' : 'Update Password'}
               </button>
             </form>
           </div>
 
-          <div className="border-t border-gray-700 pt-8">
+          <div className="mt-8">
             <button
               onClick={signOut}
-              className="text-red-400 hover:text-red-300"
+              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
             >
               Sign Out
             </button>

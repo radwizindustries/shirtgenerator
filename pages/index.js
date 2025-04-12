@@ -15,6 +15,8 @@ const SHIRT_COLORS = [
 
 const ADMIN_EMAIL = 'thebrianexp@gmail.com';
 
+const MAX_GENERATIONS = 3;
+
 export default function Home() {
   const { user, authLoading, signOut } = useAuth();
   const router = useRouter();
@@ -26,15 +28,20 @@ export default function Home() {
   const [selectedSize, setSelectedSize] = useState('M');
   const [selectedColor, setSelectedColor] = useState(SHIRT_COLORS[0]);
   const [showOrderModal, setShowOrderModal] = useState(false);
-  const MAX_GENERATIONS = 5;
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  const isAdmin = user?.email === ADMIN_EMAIL;
+  useEffect(() => {
+    if (user) {
+      setIsAdmin(user.email === ADMIN_EMAIL);
+      fetchGenerationCount();
+    }
+  }, [user]);
 
   const fetchGenerationCount = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        setError('Not authenticated');
+        console.error('No session found');
         return;
       }
 
@@ -45,7 +52,8 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch generation count');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch generation count');
       }
 
       const data = await response.json();
@@ -57,8 +65,18 @@ export default function Home() {
   };
 
   const generateImage = async () => {
+    if (!user) {
+      setError('Please sign in to generate images');
+      return;
+    }
+
     if (!prompt.trim()) {
       setError('Please enter a prompt');
+      return;
+    }
+
+    if (generationCount >= MAX_GENERATIONS && !isAdmin) {
+      setError('You have reached your daily generation limit');
       return;
     }
 
@@ -69,7 +87,7 @@ export default function Home() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        throw new Error('Not authenticated');
+        throw new Error('Please sign in to generate images');
       }
 
       const response = await fetch('/api/generate', {

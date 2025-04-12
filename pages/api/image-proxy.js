@@ -10,7 +10,12 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'URL is required' });
     }
 
-    // For DALL-E URLs, we can fetch directly as they include a SAS token
+    // For DALL-E URLs, redirect to the original URL
+    if (url.includes('oaidalleapiprodscus.blob.core.windows.net')) {
+      return res.redirect(url);
+    }
+
+    // For other URLs, proxy the request
     const response = await fetch(url);
     
     if (!response.ok) {

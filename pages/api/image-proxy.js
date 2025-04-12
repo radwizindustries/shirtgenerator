@@ -12,35 +12,56 @@ export default async function handler(req, res) {
   try {
     // Check if it's a DALL-E URL
     if (url.includes('oaidalleapiprodscus.blob.core.windows.net')) {
-      // For DALL-E URLs, use the SAS token directly
-      const response = await fetch(url);
+      // For DALL-E URLs, proxy the request with authentication
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+      });
+      
       if (!response.ok) {
+        console.error('DALL-E image proxy error:', {
+          status: response.status,
+          statusText: response.statusText,
+          url: url
+        });
         throw new Error(`Failed to fetch DALL-E image: ${response.statusText}`);
       }
 
-      const contentType = response.headers.get('content-type');
-      const buffer = await response.buffer();
-
-      res.setHeader('Content-Type', contentType);
+      // Get the image data
+      const imageBuffer = await response.arrayBuffer();
+      
+      // Set appropriate headers
+      res.setHeader('Content-Type', response.headers.get('Content-Type') || 'image/png');
       res.setHeader('Cache-Control', 'public, max-age=31536000');
-      res.send(buffer);
-      return;
+      
+      // Send the image data
+      return res.send(Buffer.from(imageBuffer));
     }
 
     // For other URLs, proxy the request
     const response = await fetch(url);
     if (!response.ok) {
+      console.error('Image proxy error:', {
+        status: response.status,
+        statusText: response.statusText,
+        url: url
+      });
       throw new Error(`Failed to fetch image: ${response.statusText}`);
     }
 
-    const contentType = response.headers.get('content-type');
-    const buffer = await response.buffer();
+    // Get the image data
+    const imageBuffer = await response.arrayBuffer();
 
-    res.setHeader('Content-Type', contentType);
+    // Set appropriate headers
+    res.setHeader('Content-Type', response.headers.get('Content-Type') || 'image/png');
     res.setHeader('Cache-Control', 'public, max-age=31536000');
-    res.send(buffer);
+    
+    // Send the image data
+    res.send(Buffer.from(imageBuffer));
   } catch (error) {
     console.error('Error proxying image:', error);
-    res.status(500).json({ error: 'Failed to proxy image' });
+    res.status(500).json({ error: error.message });
   }
 } 

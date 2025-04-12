@@ -27,7 +27,11 @@ export default function Login() {
 
     try {
       const { data, error } = await signIn(formData.email, formData.password);
-      if (error) throw error;
+      
+      if (error) {
+        throw error;
+      }
+      
       if (data?.user) {
         router.push('/');
       }
@@ -47,7 +51,7 @@ export default function Login() {
             Welcome Back
           </h1>
           <p className="text-gray-400">
-            Sign in to generate unlimited designs
+            Sign in to continue generating designs
           </p>
         </div>
 
@@ -99,15 +103,9 @@ export default function Login() {
           <p className="text-gray-400">
             Don't have an account?{' '}
             <Link href="/signup" className="text-purple-300 hover:text-purple-200">
-              Create one
+              Sign up
             </Link>
           </p>
-        </div>
-
-        <div className="mt-6 text-center">
-          <Link href="/" className="text-gray-400 hover:text-gray-300 text-sm">
-            ← Back to Home
-          </Link>
         </div>
       </div>
     </div>

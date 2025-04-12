@@ -1,3 +1,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.gallery-slide {
+  transition: transform 0.5s ease-in-out;
+}
+
+.gallery-container {
+  transition: transform 0.5s ease-in-out;
+}

@@ -18,7 +18,7 @@ const ADMIN_EMAIL = 'thebrianexp@gmail.com';
 const MAX_GENERATIONS = 3;
 
 export default function Home() {
-  const { user, authLoading, signOut } = useAuth();
+  const { user, authLoading, signOut, setUser } = useAuth();
   const router = useRouter();
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -73,107 +73,81 @@ export default function Home() {
     }
   };
 
-  const generateImage = async () => {
-    if (!user) {
-      setError('Please sign in to generate images');
-      return;
-    }
-
+  const handleGenerate = async () => {
     if (!prompt.trim()) {
       setError('Please enter a prompt');
       return;
     }
 
-    if (generationCount >= MAX_GENERATIONS && !isAdmin) {
-      setError('You have reached your daily generation limit');
-      return;
-    }
-
     setIsGenerating(true);
     setError(null);
-    setImageUrl(null);
 
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        console.error('Session error:', sessionError);
-        setError('Session error. Please try signing in again.');
-        return;
-      }
-
-      if (!session) {
-        console.log('No active session');
-        setError('Please sign in to generate images');
-        return;
-      }
-
       // Generate image with DALL-E
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({ prompt }),
       });
 
-      let data;
-      try {
-        data = await response.json();
-      } catch (e) {
-        console.error('Error parsing response:', e);
-        if (response.status === 504) {
-          throw new Error('The request took too long. Please try again with a simpler prompt.');
-        }
-        throw new Error('Failed to parse server response');
-      }
-
       if (!response.ok) {
-        if (response.status === 504) {
-          throw new Error('The request took too long. Please try again with a simpler prompt.');
-        }
-        throw new Error(data.error || 'Failed to generate image');
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to generate image');
       }
 
-      if (!data.imageUrl) {
-        throw new Error('No image URL received from server');
-      }
+      const { imageUrl } = await response.json();
+      setImageUrl(imageUrl);
 
-      setImageUrl(data.imageUrl);
-      setError(null);
-
-      // Create Gelato product with mockups
+      // Create product with Gelato
       const gelatoResponse = await fetch('/api/gelato', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
         },
-        body: JSON.stringify({
-          imageUrl: data.imageUrl,
-          prompt: prompt
+        body: JSON.stringify({ 
+          imageUrl,
+          color: selectedColor 
         }),
       });
 
-      let gelatoData;
-      try {
-        gelatoData = await gelatoResponse.json();
-      } catch (e) {
-        console.error('Error parsing Gelato response:', e);
-        // Don't throw error here, just log it
-      }
-
       if (!gelatoResponse.ok) {
-        console.error('Error creating Gelato product:', gelatoData?.error || 'Unknown error');
-        // Don't throw error here, just log it
-      } else {
-        console.log('Gelato product created:', gelatoData);
+        const error = await gelatoResponse.json();
+        throw new Error(error.error || 'Failed to create product');
       }
 
-      await fetchGenerationCount();
+      const { mockupUrl } = await gelatoResponse.json();
+      setImageUrl(mockupUrl);
+
+      // Save to gallery
+      const { error: saveError } = await supabase
+        .from('designs')
+        .insert([
+          {
+            user_id: user.id,
+            prompt,
+            image_url: imageUrl,
+            mockup_url: mockupUrl,
+            color: selectedColor,
+          },
+        ]);
+
+      if (saveError) throw saveError;
+
+      // Update generation count
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ generations_remaining: user.generations_remaining - 1 })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      // Refresh user data
+      const { data: { user: updatedUser } } = await supabase.auth.getUser();
+      setUser(updatedUser);
     } catch (error) {
-      console.error('Error generating image:', error);
+      console.error('Error:', error);
       setError(error.message);
     } finally {
       setIsGenerating(false);
@@ -285,7 +259,7 @@ export default function Home() {
             />
 
             <button
-              onClick={generateImage}
+              onClick={handleGenerate}
               disabled={isGenerating || !prompt || !user || (!isAdmin && generationCount >= MAX_GENERATIONS)}
               className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded mb-4 disabled:opacity-50"
             >
@@ -301,19 +275,22 @@ export default function Home() {
                 {/* Generated Design */}
                 <div className="text-center">
                   <h3 className="text-xl font-semibold mb-4">Generated Design</h3>
-                  {isGenerating ? (
-                    <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center animate-pulse">
-                      <p className="text-gray-500">Generating...</p>
-                    </div>
-                  ) : imageUrl ? (
-                    <div className="relative w-full max-w-2xl mx-auto">
-                      <img
-                        src={`/api/image-proxy?url=${encodeURIComponent(imageUrl)}`}
-                        alt="Generated design"
-                        className="w-full h-auto rounded-lg shadow-lg"
-                      />
-                    </div>
-                  ) : null}
+                  <div className="flex-1 flex items-center justify-center">
+                    {isGenerating ? (
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                        <p className="text-white">Generating your design...</p>
+                      </div>
+                    ) : imageUrl ? (
+                      <div className="relative w-full max-w-2xl mx-auto">
+                        <img
+                          src={`/api/image-proxy?url=${encodeURIComponent(imageUrl)}`}
+                          alt="Generated design"
+                          className="w-full h-auto rounded-lg shadow-lg"
+                        />
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
 
                 {/* Gelato Template Preview */}

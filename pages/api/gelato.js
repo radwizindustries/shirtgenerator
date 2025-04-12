@@ -1,67 +1,50 @@
 import { createClient } from '@supabase/supabase-js';
 
-const GELATO_API_KEY = process.env.GELATO_API_KEY;
-const GELATO_API_URL = 'https://api.gelato.com/v2';
-
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
+const GELATO_API_URL = 'https://api.gelato.com/v2';
+const TEMPLATE_ID = '5fc7cef1-8fd3-4361-855f-59f41a83cd57';
+
 export default async function handler(req, res) {
-  if (req.method !== 'GET' && req.method !== 'POST') {
+  if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    // Verify session
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      return res.status(401).json({ error: 'No authorization header' });
+    const { imageUrl, color } = req.body;
+
+    if (!process.env.GELATO_API_KEY) {
+      throw new Error('Gelato API key not configured');
     }
 
-    const token = authHeader.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'No token provided' });
-    }
-
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-    if (userError || !user) {
-      console.error('User error:', userError);
-      return res.status(401).json({ error: 'Invalid token' });
-    }
-
-    if (req.method === 'GET') {
-      // Get template information
-      const templateId = '5fc7cef1-8fd3-4361-855f-59f41a83cd57'; // T-shirt template ID
-      const response = await fetch(`${GELATO_API_URL}/templates/${templateId}`, {
-        headers: {
-          'Authorization': `Bearer ${process.env.GELATO_API_KEY.split(':')[0]}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to fetch template');
-      }
-
-      const template = await response.json();
-      return res.status(200).json(template);
-    }
-
-    // Handle POST request for creating a product
-    const { imageUrl, prompt } = req.body;
-    if (!imageUrl || !prompt) {
-      return res.status(400).json({ error: 'Image URL and prompt are required' });
-    }
-
-    // First, get template information
-    const templateId = '5fc7cef1-8fd3-4361-855f-59f41a83cd57'; // T-shirt template ID
-    const templateResponse = await fetch(`${GELATO_API_URL}/templates/${templateId}`, {
+    // First, upload the image to Gelato
+    const imageResponse = await fetch(imageUrl);
+    const imageBuffer = await imageResponse.arrayBuffer();
+    
+    const uploadResponse = await fetch(`${GELATO_API_URL}/images`, {
+      method: 'POST',
       headers: {
-        'X-API-KEY': process.env.GELATO_API_KEY.split('-')[0],
+        'X-API-KEY': process.env.GELATO_API_KEY,
+        'Content-Type': 'image/png',
+      },
+      body: Buffer.from(imageBuffer),
+    });
+
+    if (!uploadResponse.ok) {
+      const error = await uploadResponse.json();
+      throw new Error(error.message || 'Failed to upload image');
+    }
+
+    const { id: imageId } = await uploadResponse.json();
+    console.log('Image uploaded successfully:', imageId);
+
+    // Get the template
+    const templateResponse = await fetch(`${GELATO_API_URL}/templates/${TEMPLATE_ID}`, {
+      headers: {
+        'X-API-KEY': process.env.GELATO_API_KEY,
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
@@ -73,7 +56,7 @@ export default async function handler(req, res) {
     }
 
     const template = await templateResponse.json();
-    console.log('Template response:', template); // Debug log
+    console.log('Template response:', template);
 
     // Get the variant ID based on the color
     const targetColor = (color === '#FFFFFF' ? 'white' : 'black');
@@ -89,37 +72,58 @@ export default async function handler(req, res) {
       throw new Error(`Variant not found for the selected color: ${targetColor}`);
     }
 
-    // Create a product with the design
-    const response = await fetch(`${GELATO_API_URL}/products`, {
+    // Create a product with the image
+    const productResponse = await fetch(`${GELATO_API_URL}/products`, {
       method: 'POST',
       headers: {
-        'X-API-KEY': process.env.GELATO_API_KEY.split('-')[0],
+        'X-API-KEY': process.env.GELATO_API_KEY,
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
       body: JSON.stringify({
-        templateId,
-        name: prompt,
-        description: `AI-generated t-shirt design: ${prompt}`,
-        variants: template.variants.map(variant => ({
-          ...variant,
-          images: [{
-            url: imageUrl,
-            position: 'front'
-          }]
-        }))
-      })
+        templateId: TEMPLATE_ID,
+        variantId: variant.id,
+        images: [{
+          layerId: 'front', // This should match the layer ID in your template
+          url: `https://api.gelato.com/v2/images/${imageId}`
+        }]
+      }),
     });
 
-    if (!response.ok) {
-      const error = await response.json();
+    if (!productResponse.ok) {
+      const error = await productResponse.json();
       throw new Error(error.message || 'Failed to create product');
     }
 
-    const product = await response.json();
-    return res.status(200).json(product);
+    const product = await productResponse.json();
+    console.log('Product created:', product);
+
+    // Get mockups for the product
+    const mockupResponse = await fetch(`${GELATO_API_URL}/products/${product.id}/mockups`, {
+      headers: {
+        'X-API-KEY': process.env.GELATO_API_KEY,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+    });
+
+    if (!mockupResponse.ok) {
+      const error = await mockupResponse.json();
+      throw new Error(error.message || 'Failed to fetch mockups');
+    }
+
+    const mockups = await mockupResponse.json();
+    console.log('Mockups:', mockups);
+
+    // Return the first mockup URL
+    const mockupUrl = mockups.mockups?.[0]?.url;
+    if (!mockupUrl) {
+      throw new Error('No mockup URL found');
+    }
+
+    return res.status(200).json({ mockupUrl });
   } catch (error) {
     console.error('Error in Gelato API:', error);
-    return res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 } 

@@ -306,11 +306,13 @@ export default function Home() {
                       <p className="text-gray-500">Generating...</p>
                     </div>
                   ) : imageUrl ? (
-                    <img
-                      src={imageUrl}
-                      alt={prompt || 'Generated design'}
-                      className="w-full rounded-lg shadow-lg object-contain h-96"
-                    />
+                    <div className="relative w-full max-w-2xl mx-auto">
+                      <img
+                        src={`/api/image-proxy?url=${encodeURIComponent(imageUrl)}`}
+                        alt="Generated design"
+                        className="w-full h-auto rounded-lg shadow-lg"
+                      />
+                    </div>
                   ) : null}
                 </div>
 

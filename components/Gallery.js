@@ -67,15 +67,17 @@ export default function Gallery() {
                 key={`${design.id}-${index}`} 
                 className="flex-shrink-0 w-64"
               >
-                <div className="bg-white/10 rounded-lg p-4">
+                <div className="relative group">
                   <img
-                    src={design.image_url}
+                    src={`/api/image-proxy?url=${encodeURIComponent(design.image_url)}`}
                     alt={design.prompt}
                     className="w-full h-64 object-cover rounded-lg"
                   />
-                  <p className="text-white mt-2 text-sm truncate" title={design.prompt}>
-                    {design.prompt}
-                  </p>
+                  <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-lg">
+                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                      <p className="text-white text-sm">{design.prompt}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}

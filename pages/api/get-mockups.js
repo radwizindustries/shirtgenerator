@@ -5,7 +5,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
-const TEMPLATE_ID = '5fc7cef1-8fd3-4361-855f-59f41a83cd57';
+const TEMPLATE_ID = '5938eebb-3e4e-4386-9384-3008ed9908ab';
 const GELATO_API_URL = 'https://api.gelato.com/v2';
 
 export default async function handler(req, res) {

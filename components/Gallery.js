@@ -8,9 +8,15 @@ export default function Gallery({ onImageSelect }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const containerRef = useRef(null);
   const scrollInterval = useRef(null);
+  const isScrolling = useRef(false);
 
   useEffect(() => {
     fetchDesigns();
+    return () => {
+      if (scrollInterval.current) {
+        clearInterval(scrollInterval.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -26,8 +32,10 @@ export default function Gallery({ onImageSelect }) {
 
   const startAutoScroll = () => {
     scrollInterval.current = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % designs.length);
-    }, 3000); // Scroll every 3 seconds
+      if (!isScrolling.current) {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % designs.length);
+      }
+    }, 3000);
   };
 
   const fetchDesigns = async () => {
@@ -74,6 +82,8 @@ export default function Gallery({ onImageSelect }) {
         style={{
           transform: `translateX(-${currentIndex * (100 / 6)}%)`,
         }}
+        onMouseEnter={() => isScrolling.current = true}
+        onMouseLeave={() => isScrolling.current = false}
       >
         {visibleDesigns.map((design, index) => (
           <div

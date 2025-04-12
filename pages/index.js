@@ -317,14 +317,9 @@ export default function Home() {
 
           {/* Gallery Section */}
           <div className="mt-16">
-            <h3 className="text-xl font-semibold mb-8">Recent Designs</h3>
+            <h2 className="text-3xl font-bold text-purple-300 mb-8 text-center">Design Gallery</h2>
             <Gallery />
           </div>
-        </div>
-
-        <div className="mt-16">
-          <h2 className="text-3xl font-bold text-purple-300 mb-8 text-center">Gallery</h2>
-          <Gallery />
         </div>
       </div>
 

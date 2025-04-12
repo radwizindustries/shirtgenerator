@@ -69,7 +69,7 @@ export default function Gallery({ onImageSelect }) {
 
   // Create a circular array of designs for seamless scrolling
   const visibleDesigns = [];
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 12; i++) { // Double the array for seamless scrolling
     const index = (currentIndex + i) % designs.length;
     visibleDesigns.push(designs[index]);
   }
@@ -80,7 +80,7 @@ export default function Gallery({ onImageSelect }) {
         ref={containerRef}
         className="flex gap-4 transition-transform duration-1000 ease-in-out"
         style={{
-          transform: `translateX(-${currentIndex * (100 / 6)}%)`,
+          transform: `translateX(-${(currentIndex % 6) * (100 / 6)}%)`,
         }}
         onMouseEnter={() => isScrolling.current = true}
         onMouseLeave={() => isScrolling.current = false}

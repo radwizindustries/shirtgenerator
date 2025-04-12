@@ -50,6 +50,11 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Invalid session' });
     }
 
+    // Verify the token matches the session
+    if (session.access_token !== token) {
+      return res.status(401).json({ error: 'Token mismatch' });
+    }
+
     if (req.method === 'GET') {
       // Get user's generation count
       const { count, error } = await supabase

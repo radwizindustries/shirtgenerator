@@ -40,33 +40,19 @@ export default function Home() {
   const fetchGenerationCount = async () => {
     try {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
+      if (sessionError || !session) {
         console.error('Session error:', sessionError);
-        setError('Session error. Please try signing in again.');
+        setError('Please sign in to generate images');
         return;
       }
 
-      if (!session) {
-        console.log('No active session');
-        setError('Please sign in to view your generation count');
-        return;
-      }
+      const { count, error } = await supabase
+        .from('user_generations')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', session.user.id);
 
-      const response = await fetch('/api/generate', {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch generation count');
-      }
-
-      const data = await response.json();
-      setGenerationCount(data.count);
-      setError(null); // Clear any previous errors
+      if (error) throw error;
+      setGenerationCount(count || 0);
     } catch (error) {
       console.error('Error fetching generation count:', error);
       setError(error.message);
@@ -83,11 +69,17 @@ export default function Home() {
     setError(null);
 
     try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        throw new Error('Please sign in to generate images');
+      }
+
       // Generate image with DALL-E
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({ prompt }),
       });
@@ -105,6 +97,7 @@ export default function Home() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({ 
           imageUrl,
@@ -125,7 +118,7 @@ export default function Home() {
         .from('designs')
         .insert([
           {
-            user_id: user.id,
+            user_id: session.user.id,
             prompt,
             image_url: imageUrl,
             mockup_url: mockupUrl,
@@ -139,7 +132,7 @@ export default function Home() {
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ generations_remaining: user.generations_remaining - 1 })
-        .eq('id', user.id);
+        .eq('id', session.user.id);
 
       if (updateError) throw updateError;
 

@@ -26,29 +26,46 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
   const signIn = async (email, password) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    if (error) throw error
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      if (error) throw error
+      return data
+    } catch (error) {
+      console.error('Sign in error:', error)
+      throw error
+    }
   }
 
   const signUp = async (email, password, username) => {
-    const { error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          username: username
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username: username
+          }
         }
-      }
-    })
-    if (signUpError) throw signUpError
+      })
+      if (error) throw error
+      return data
+    } catch (error) {
+      console.error('Sign up error:', error)
+      throw error
+    }
   }
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    if (error) throw error
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+    } catch (error) {
+      console.error('Sign out error:', error)
+      throw error
+    }
   }
 
   const value = {
@@ -67,5 +84,9 @@ export const AuthProvider = ({ children }) => {
 }
 
 export const useAuth = () => {
-  return useContext(AuthContext)
+  const context = useContext(AuthContext)
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
 } 

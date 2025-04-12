@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../components/AuthProvider';
@@ -24,11 +26,14 @@ export default function Login() {
     console.log('Form submitted:', { email: formData.email });
 
     try {
-      await signIn(formData.email, formData.password);
-      router.push('/');
+      const { data, error } = await signIn(formData.email, formData.password);
+      if (error) throw error;
+      if (data?.user) {
+        router.push('/');
+      }
     } catch (err) {
       console.error('Auth error:', err);
-      setError(err.message);
+      setError(err.message || 'Failed to sign in. Please try again.');
     } finally {
       setIsLoading(false);
     }

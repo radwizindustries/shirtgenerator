@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../components/AuthProvider';
@@ -9,7 +11,6 @@ export default function SignUp() {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    confirmPassword: '',
     username: ''
   });
   const [error, setError] = useState(null);
@@ -26,17 +27,14 @@ export default function SignUp() {
     console.log('Form submitted:', { email: formData.email });
 
     try {
-      if (formData.password !== formData.confirmPassword) {
-        throw new Error('Passwords do not match');
+      const { data, error } = await signUp(formData.email, formData.password, formData.username);
+      if (error) throw error;
+      if (data?.user) {
+        router.push('/');
       }
-      if (!formData.username) {
-        throw new Error('Username is required');
-      }
-      await signUp(formData.email, formData.password, formData.username);
-      router.push('/');
     } catch (err) {
       console.error('Auth error:', err);
-      setError(err.message);
+      setError(err.message || 'Failed to create account. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -50,7 +48,7 @@ export default function SignUp() {
             Create Account
           </h1>
           <p className="text-gray-400">
-            Create an account to generate unlimited designs
+            Sign up to start generating designs
           </p>
         </div>
 
@@ -97,20 +95,6 @@ export default function SignUp() {
             />
           </div>
 
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-1">
-              Confirm Password
-            </label>
-            <input
-              id="confirmPassword"
-              type="password"
-              value={formData.confirmPassword}
-              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-              className="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
-              required
-            />
-          </div>
-
           {error && (
             <div className="p-3 bg-red-900/50 text-red-200 rounded text-sm">
               {error}
@@ -122,7 +106,7 @@ export default function SignUp() {
             disabled={isLoading}
             className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded transition-colors disabled:opacity-50"
           >
-            {isLoading ? 'Creating Account...' : 'Create Account'}
+            {isLoading ? 'Creating account...' : 'Sign Up'}
           </button>
         </form>
 
@@ -133,12 +117,6 @@ export default function SignUp() {
               Sign in
             </Link>
           </p>
-        </div>
-
-        <div className="mt-6 text-center">
-          <Link href="/" className="text-gray-400 hover:text-gray-300 text-sm">
-            ← Back to Home
-          </Link>
         </div>
       </div>
     </div>

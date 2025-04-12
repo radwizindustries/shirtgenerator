@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     // First, list all templates
     const templatesResponse = await fetch(`${GELATO_API_URL}/templates`, {
       headers: {
-        'X-API-KEY': process.env.GELATO_API_KEY.split(':')[0],
+        'X-API-KEY': process.env.GELATO_API_KEY.split('-')[0],
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
@@ -41,7 +41,7 @@ export default async function handler(req, res) {
     // Get the specific template
     const templateResponse = await fetch(`${GELATO_API_URL}/templates/${TEMPLATE_ID}`, {
       headers: {
-        'X-API-KEY': process.env.GELATO_API_KEY.split(':')[0],
+        'X-API-KEY': process.env.GELATO_API_KEY.split('-')[0],
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
@@ -73,7 +73,7 @@ export default async function handler(req, res) {
     // Get mockups for the specific variant
     const mockupResponse = await fetch(`${GELATO_API_URL}/variants/${variant.id}/mockups`, {
       headers: {
-        'X-API-KEY': process.env.GELATO_API_KEY.split(':')[0],
+        'X-API-KEY': process.env.GELATO_API_KEY.split('-')[0],
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },

@@ -286,7 +286,7 @@ export default function Home() {
                         <img
                           src={`/api/image-proxy?url=${encodeURIComponent(imageUrl)}`}
                           alt="Generated design"
-                          className="w-full h-auto rounded-lg shadow-lg"
+                          className="w-full h-auto rounded-lg shadow-lg object-contain h-96"
                         />
                         {selectedDesign && (
                           <div className="absolute top-2 right-2 bg-black/50 px-2 py-1 rounded text-sm">
@@ -306,7 +306,7 @@ export default function Home() {
                       <p className="text-gray-500">Loading preview...</p>
                     </div>
                   ) : imageUrl ? (
-                    <div className="relative">
+                    <div className="relative w-full max-w-2xl mx-auto">
                       <img
                         src={`/api/get-mockups?color=${encodeURIComponent(selectedColor.value)}`}
                         alt="Shirt preview"

@@ -6,6 +6,7 @@ const supabase = createClient(
 );
 
 const TEMPLATE_ID = '5fc7cef1-8fd3-4361-855f-59f41a83cd57';
+const GELATO_API_URL = 'https://order.ie.live.gelato.tech/api/v2';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -20,9 +21,9 @@ export default async function handler(req, res) {
     }
 
     // First, list all templates
-    const templatesResponse = await fetch('https://order.gelatoapis.com/v2/ecommerce/templates', {
+    const templatesResponse = await fetch(`${GELATO_API_URL}/ecommerce/templates`, {
       headers: {
-        'X-API-KEY': process.env.GELATO_API_KEY,
+        'Authorization': `Basic ${Buffer.from(`${process.env.GELATO_API_KEY}:`).toString('base64')}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
@@ -38,9 +39,9 @@ export default async function handler(req, res) {
     console.log('Available templates:', templates); // Debug log
 
     // Get the specific template
-    const templateResponse = await fetch(`https://order.gelatoapis.com/v2/ecommerce/templates/${TEMPLATE_ID}`, {
+    const templateResponse = await fetch(`${GELATO_API_URL}/ecommerce/templates/${TEMPLATE_ID}`, {
       headers: {
-        'X-API-KEY': process.env.GELATO_API_KEY,
+        'Authorization': `Basic ${Buffer.from(`${process.env.GELATO_API_KEY}:`).toString('base64')}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
@@ -70,9 +71,9 @@ export default async function handler(req, res) {
     }
 
     // Get mockups for the specific variant
-    const mockupResponse = await fetch(`https://order.gelatoapis.com/v2/ecommerce/variants/${variant.id}/mockups`, {
+    const mockupResponse = await fetch(`${GELATO_API_URL}/ecommerce/variants/${variant.id}/mockups`, {
       headers: {
-        'X-API-KEY': process.env.GELATO_API_KEY,
+        'Authorization': `Basic ${Buffer.from(`${process.env.GELATO_API_KEY}:`).toString('base64')}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },

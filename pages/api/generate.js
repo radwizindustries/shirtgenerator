@@ -39,16 +39,11 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'No token provided' });
     }
 
-    // Verify the session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession(token);
-    if (sessionError || !session) {
-      console.error('Session error:', sessionError);
-      return res.status(401).json({ error: 'Invalid session' });
-    }
-
-    const user = session.user;
-    if (!user) {
-      return res.status(401).json({ error: 'No user found in session' });
+    // Verify the session using the token
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    if (userError || !user) {
+      console.error('User error:', userError);
+      return res.status(401).json({ error: 'Invalid token' });
     }
 
     if (req.method === 'GET') {

@@ -39,9 +39,17 @@ export default function Home() {
 
   const fetchGenerationCount = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        setError('Session error. Please try signing in again.');
+        return;
+      }
+
       if (!session) {
-        console.error('No session found');
+        console.log('No active session');
+        setError('Please sign in to view your generation count');
         return;
       }
 
@@ -58,6 +66,7 @@ export default function Home() {
 
       const data = await response.json();
       setGenerationCount(data.count);
+      setError(null); // Clear any previous errors
     } catch (error) {
       console.error('Error fetching generation count:', error);
       setError(error.message);
@@ -85,9 +94,18 @@ export default function Home() {
     setImageUrl(null);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        setError('Session error. Please try signing in again.');
+        return;
+      }
+
       if (!session) {
-        throw new Error('Please sign in to generate images');
+        console.log('No active session');
+        setError('Please sign in to generate images');
+        return;
       }
 
       const response = await fetch('/api/generate', {
@@ -106,6 +124,7 @@ export default function Home() {
 
       const data = await response.json();
       setImageUrl(data.imageUrl);
+      setError(null); // Clear any previous errors
       await fetchGenerationCount();
     } catch (error) {
       console.error('Error generating image:', error);

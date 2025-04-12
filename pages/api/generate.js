@@ -20,6 +20,39 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Add this function to download and save image to Supabase Storage
+async function saveImageToStorage(imageUrl, userId) {
+  try {
+    // Download the image
+    const response = await fetch(imageUrl);
+    if (!response.ok) throw new Error('Failed to download image');
+    const imageBuffer = await response.arrayBuffer();
+    
+    // Generate a unique filename
+    const filename = `${userId}/${Date.now()}.png`;
+    
+    // Upload to Supabase Storage
+    const { data, error } = await supabase.storage
+      .from('shirt_designs')
+      .upload(filename, imageBuffer, {
+        contentType: 'image/png',
+        upsert: true
+      });
+      
+    if (error) throw error;
+    
+    // Get the public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('shirt_designs')
+      .getPublicUrl(filename);
+      
+    return publicUrl;
+  } catch (error) {
+    console.error('Error saving image to storage:', error);
+    throw error;
+  }
+}
+
 // The main handler function for the API route
 export default async function handler(req, res) {
   // Set a longer timeout for this route
@@ -103,6 +136,9 @@ export default async function handler(req, res) {
       throw new Error('Failed to get image URL from OpenAI');
     }
 
+    // Save the image to Supabase Storage
+    const permanentImageUrl = await saveImageToStorage(imageUrl, user.id);
+
     // Save the generation to the database
     const { error: insertError } = await supabase
       .from('user_generations')
@@ -110,7 +146,7 @@ export default async function handler(req, res) {
         {
           user_id: user.id,
           prompt: prompt,
-          image_url: imageUrl
+          image_url: permanentImageUrl
         }
       ]);
 
@@ -126,7 +162,8 @@ export default async function handler(req, res) {
         {
           user_id: user.id,
           prompt: prompt,
-          image_url: imageUrl,
+          image_url: imageUrl, // Keep original URL for reference
+          permanent_image_url: permanentImageUrl, // Add permanent URL
           created_at: new Date().toISOString()
         }
       ]);

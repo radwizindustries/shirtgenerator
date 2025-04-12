@@ -40,16 +40,24 @@ export default function Gallery({ onImageSelect }) {
 
   const fetchDesigns = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('shirt_designs')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setDesigns(data);
+      
+      // Transform data to use permanent URLs
+      const designsWithUrls = data.map(design => ({
+        ...design,
+        display_url: design.permanent_image_url || design.image_url
+      }));
+      
+      setDesigns(designsWithUrls);
     } catch (error) {
       console.error('Error fetching designs:', error);
-      setError(error.message);
+      setError('Failed to load designs');
     } finally {
       setLoading(false);
     }
@@ -87,19 +95,21 @@ export default function Gallery({ onImageSelect }) {
       >
         {visibleDesigns.map((design, index) => (
           <div
-            key={`${design.id}-${index}`}
-            className="flex-shrink-0 w-1/6 cursor-pointer hover:opacity-90 transition-opacity"
-            onClick={() => onImageSelect(design)}
+            key={design.id}
+            className={`relative transition-opacity duration-300 ${
+              index === currentIndex ? 'opacity-100' : 'opacity-0'
+            }`}
           >
-            <div className="relative aspect-square">
+            <div className="relative aspect-square w-full overflow-hidden rounded-lg">
               <img
-                src={`/api/image-proxy?url=${encodeURIComponent(design.image_url)}`}
+                src={design.display_url}
                 alt={design.prompt}
-                className="w-full h-full object-cover rounded-lg shadow-lg"
+                className="h-full w-full object-cover cursor-pointer hover:opacity-90"
+                onClick={() => onImageSelect(design)}
               />
-              <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-2 rounded-b-lg">
-                <p className="text-white text-sm truncate">{design.prompt}</p>
-              </div>
+            </div>
+            <div className="mt-2 text-sm text-gray-600">
+              {design.prompt}
             </div>
           </div>
         ))}

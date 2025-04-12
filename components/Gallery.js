@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
-export default function Gallery() {
+export default function Gallery({ onImageSelect }) {
   const [designs, setDesigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -42,6 +42,12 @@ export default function Gallery() {
     }
   };
 
+  const handleImageClick = (design) => {
+    if (onImageSelect) {
+      onImageSelect(design);
+    }
+  };
+
   if (loading) return <div className="text-center text-white">Loading gallery...</div>;
   if (error) return <div className="text-center text-red-500">Error: {error}</div>;
   if (designs.length === 0) return <div className="text-center text-white">No designs yet!</div>;
@@ -67,7 +73,10 @@ export default function Gallery() {
                 key={`${design.id}-${index}`} 
                 className="flex-shrink-0 w-64"
               >
-                <div className="relative group">
+                <div 
+                  className="relative group cursor-pointer"
+                  onClick={() => handleImageClick(design)}
+                >
                   <img
                     src={`/api/image-proxy?url=${encodeURIComponent(design.image_url)}`}
                     alt={design.prompt}

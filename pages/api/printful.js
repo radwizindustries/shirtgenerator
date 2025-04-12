@@ -35,20 +35,38 @@ export default async function handler(req, res) {
     const templates = await templatesResponse.json();
     console.log('Available templates:', templates);
 
-    // Find the appropriate product variant based on color
-    const targetColor = (color === '#FFFFFF' ? 'white' : 'black');
-    const product = templates.result.find(product => 
-      product.variants && product.variants.some(variant => 
-        variant.color && variant.color.toLowerCase() === targetColor
-      )
-    );
-
+    // Find the appropriate product
+    const product = templates.result[0]; // Get the first product
     if (!product) {
-      console.error('Available products:', templates.result);
-      throw new Error(`Product not found for the selected color: ${targetColor}`);
+      throw new Error('No products found');
     }
 
-    const variant = product.variants.find(v => v.color.toLowerCase() === targetColor);
+    // Fetch variants for the product
+    const variantsResponse = await fetch(`${PRINTFUL_API_URL}/store/products/${product.id}`, {
+      headers: {
+        'Authorization': `Bearer ${process.env.PRINTFUL_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+    });
+
+    if (!variantsResponse.ok) {
+      const error = await variantsResponse.json();
+      throw new Error(error.message || 'Failed to fetch product variants');
+    }
+
+    const productDetails = await variantsResponse.json();
+    console.log('Product details:', productDetails);
+
+    // Find the appropriate variant based on color
+    const targetColor = (color === '#FFFFFF' ? 'white' : 'black');
+    const variant = productDetails.result.variants.find(v => 
+      v.color && v.color.toLowerCase() === targetColor
+    );
+
+    if (!variant) {
+      console.error('Available variants:', productDetails.result.variants);
+      throw new Error(`Variant not found for the selected color: ${targetColor}`);
+    }
 
     // Create a product with the image
     const productResponse = await fetch(`${PRINTFUL_API_URL}/store/products/${product.id}/variants`, {

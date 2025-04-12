@@ -118,12 +118,22 @@ export default function Home() {
         body: JSON.stringify({ prompt }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate image');
+      let data;
+      try {
+        data = await response.json();
+      } catch (e) {
+        console.error('Error parsing response:', e);
+        throw new Error('Failed to parse server response');
       }
 
-      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate image');
+      }
+
+      if (!data.imageUrl) {
+        throw new Error('No image URL received from server');
+      }
+
       setImageUrl(data.imageUrl);
       setError(null);
 
@@ -140,12 +150,18 @@ export default function Home() {
         }),
       });
 
+      let gelatoData;
+      try {
+        gelatoData = await gelatoResponse.json();
+      } catch (e) {
+        console.error('Error parsing Gelato response:', e);
+        // Don't throw error here, just log it
+      }
+
       if (!gelatoResponse.ok) {
-        const errorData = await gelatoResponse.json();
-        console.error('Error creating Gelato product:', errorData);
+        console.error('Error creating Gelato product:', gelatoData?.error || 'Unknown error');
         // Don't throw error here, just log it
       } else {
-        const gelatoData = await gelatoResponse.json();
         console.log('Gelato product created:', gelatoData);
       }
 

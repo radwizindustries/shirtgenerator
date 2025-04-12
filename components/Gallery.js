@@ -6,6 +6,7 @@ export default function Gallery({ onImageSelect }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [imageLoadErrors, setImageLoadErrors] = useState({});
   const containerRef = useRef(null);
   const scrollInterval = useRef(null);
   const isScrolling = useRef(false);
@@ -55,6 +56,22 @@ export default function Gallery({ onImageSelect }) {
     }
   };
 
+  const handleImageError = (designId) => {
+    setImageLoadErrors(prev => ({
+      ...prev,
+      [designId]: true
+    }));
+  };
+
+  const getImageUrl = (url) => {
+    try {
+      return `/api/image-proxy?url=${encodeURIComponent(url)}`;
+    } catch (error) {
+      console.error('Error encoding image URL:', error);
+      return url; // Fallback to original URL
+    }
+  };
+
   if (loading) {
     return <div className="text-center text-white">Loading gallery...</div>;
   }
@@ -92,11 +109,19 @@ export default function Gallery({ onImageSelect }) {
             onClick={() => onImageSelect(design)}
           >
             <div className="relative aspect-square">
-              <img
-                src={`/api/image-proxy?url=${encodeURIComponent(design.image_url)}`}
-                alt={design.prompt}
-                className="w-full h-full object-cover rounded-lg shadow-lg"
-              />
+              {imageLoadErrors[design.id] ? (
+                <div className="w-full h-full flex items-center justify-center bg-gray-800 rounded-lg">
+                  <p className="text-white text-sm">Failed to load image</p>
+                </div>
+              ) : (
+                <img
+                  src={getImageUrl(design.image_url)}
+                  alt={design.prompt}
+                  className="w-full h-full object-cover rounded-lg shadow-lg"
+                  onError={() => handleImageError(design.id)}
+                  loading="lazy"
+                />
+              )}
               <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-2 rounded-b-lg">
                 <p className="text-white text-sm truncate">{design.prompt}</p>
               </div>

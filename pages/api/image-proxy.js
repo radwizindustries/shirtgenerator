@@ -10,9 +10,27 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'URL is required' });
     }
 
-    // For DALL-E URLs, try to fetch directly first
+    // For DALL-E URLs, check if the URL is expired
     if (url.includes('oaidalleapiprodscus.blob.core.windows.net')) {
       try {
+        // Extract the expiry time from the URL
+        const expiryMatch = url.match(/se=([^&]+)/);
+        if (expiryMatch) {
+          const expiryTime = new Date(decodeURIComponent(expiryMatch[1]));
+          const currentTime = new Date();
+          
+          // If URL is expired, return placeholder
+          if (currentTime > expiryTime) {
+            console.log('DALL-E URL expired:', {
+              url,
+              expiryTime,
+              currentTime
+            });
+            return res.redirect('/placeholder.png');
+          }
+        }
+
+        // Try to fetch the image if URL is still valid
         const response = await fetch(url);
         if (response.ok) {
           const imageBuffer = await response.arrayBuffer();
@@ -22,8 +40,7 @@ export default async function handler(req, res) {
         }
       } catch (error) {
         console.error('Error fetching DALL-E image:', error);
-        // If direct fetch fails, try redirecting
-        return res.redirect(url);
+        return res.redirect('/placeholder.png');
       }
     }
 
@@ -37,12 +54,8 @@ export default async function handler(req, res) {
         url: url
       });
       
-      // Return a placeholder image for missing images
-      if (response.status === 404) {
-        return res.redirect('/placeholder.png');
-      }
-      
-      throw new Error(`Failed to fetch image: ${response.statusText}`);
+      // Return placeholder for any errors
+      return res.redirect('/placeholder.png');
     }
 
     // Get the image data
@@ -56,7 +69,6 @@ export default async function handler(req, res) {
     res.send(Buffer.from(imageBuffer));
   } catch (error) {
     console.error('Error proxying image:', error);
-    // Return a placeholder image for any errors
     return res.redirect('/placeholder.png');
   }
 } 

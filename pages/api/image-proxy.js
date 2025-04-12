@@ -10,19 +10,8 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'URL is required' });
     }
 
-    // Check if the URL is from DALL-E
-    const isDalleUrl = url.includes('oaidalleapiprodscus.blob.core.windows.net');
-    
-    // For DALL-E URLs, we need to use the original URL directly
-    // as the SAS token is already included in the URL
-    const response = await fetch(url, {
-      headers: {
-        'Accept': 'image/*',
-        ...(isDalleUrl ? {
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-        } : {})
-      }
-    });
+    // For DALL-E URLs, we can fetch directly as they include a SAS token
+    const response = await fetch(url);
     
     if (!response.ok) {
       console.error('Image proxy error:', {

@@ -44,20 +44,15 @@ export default async function handler(req, res) {
     }
 
     // Verify the session using the token
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError) {
-      console.error('Session error:', sessionError);
-      return res.status(401).json({ error: 'Session error' });
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    if (userError) {
+      console.error('User verification error:', userError);
+      return res.status(401).json({ error: 'Invalid token' });
     }
 
-    if (!session) {
-      console.error('No active session');
-      return res.status(401).json({ error: 'No active session' });
-    }
-
-    // Verify the token matches the session
-    if (session.access_token !== token) {
-      return res.status(401).json({ error: 'Token mismatch' });
+    if (!user) {
+      console.error('No user found');
+      return res.status(401).json({ error: 'No user found' });
     }
 
     if (req.method === 'GET') {
@@ -65,7 +60,7 @@ export default async function handler(req, res) {
       const { count, error } = await supabase
         .from('user_generations')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', session.user.id);
+        .eq('user_id', user.id);
 
       if (error) {
         console.error('Error fetching generation count:', error);
@@ -113,7 +108,7 @@ export default async function handler(req, res) {
       .from('user_generations')
       .insert([
         {
-          user_id: session.user.id,
+          user_id: user.id,
           prompt: prompt,
           image_url: imageUrl
         }
@@ -129,7 +124,7 @@ export default async function handler(req, res) {
       .from('shirt_designs')
       .insert([
         {
-          user_id: session.user.id,
+          user_id: user.id,
           prompt: prompt,
           image_url: imageUrl,
           created_at: new Date().toISOString()

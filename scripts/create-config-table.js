@@ -20,17 +20,20 @@ async function createConfigTable() {
     const { error: createError } = await supabase.rpc('create_config_table');
     if (createError) throw createError;
 
-    // Insert Gelato API key if not exists
-    const { error: insertError } = await supabase
+    // Insert OpenAI API key if not exists
+    const { error: openaiError } = await supabase
       .from('config')
       .upsert({
-        id: 1,
-        gelato_api_key: process.env.GELATO_API_KEY
+        key: 'openai_api_key',
+        value: process.env.OPENAI_API_KEY
       });
 
-    if (insertError) throw insertError;
+    if (openaiError) {
+      console.error('Error inserting OpenAI API key:', openaiError);
+      process.exit(1);
+    }
 
-    console.log('Config table created and API key inserted successfully');
+    console.log('✅ Configuration table setup complete');
   } catch (error) {
     console.error('Error setting up config table:', error);
   }

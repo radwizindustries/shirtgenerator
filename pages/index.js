@@ -61,8 +61,13 @@ export default function Home() {
   };
 
   const handleGenerate = async () => {
-    if (!prompt.trim()) {
-      setError('Please enter a prompt');
+    if (!user) {
+      setError('Please sign in to generate designs');
+      return;
+    }
+
+    if (!isAdmin && generationCount >= MAX_GENERATIONS) {
+      setError('You have reached your generation limit');
       return;
     }
 
@@ -82,7 +87,7 @@ export default function Home() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`
         },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ prompt })
       });
 
       if (!response.ok) {
@@ -90,56 +95,19 @@ export default function Home() {
         throw new Error(error.error || 'Failed to generate image');
       }
 
-      const { imageUrl } = await response.json();
-      setImageUrl(imageUrl);
+      const { imageUrl: newImageUrl } = await response.json();
+      setImageUrl(newImageUrl);
 
-      // Create product with Gelato
-      const gelatoResponse = await fetch('/api/gelato', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({ 
-          imageUrl,
-          color: selectedColor 
-        }),
-      });
-
-      if (!gelatoResponse.ok) {
-        const error = await gelatoResponse.json();
-        throw new Error(error.error || 'Failed to create product');
+      // Increment generation count
+      if (!isAdmin) {
+        await supabase
+          .from('user_limits')
+          .upsert({ 
+            user_id: user.id,
+            generation_count: generationCount + 1
+          });
+        setGenerationCount(prev => prev + 1);
       }
-
-      const { mockupUrl } = await gelatoResponse.json();
-      setImageUrl(mockupUrl);
-
-      // Save to gallery
-      const { error: saveError } = await supabase
-        .from('designs')
-        .insert([
-          {
-            user_id: session.user.id,
-            prompt,
-            image_url: imageUrl,
-            mockup_url: mockupUrl,
-            color: selectedColor,
-          },
-        ]);
-
-      if (saveError) throw saveError;
-
-      // Update generation count
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ generations_remaining: user.generations_remaining - 1 })
-        .eq('id', session.user.id);
-
-      if (updateError) throw updateError;
-
-      // Refresh user data
-      const { data: { user: updatedUser } } = await supabase.auth.getUser();
-      setUser(updatedUser);
     } catch (error) {
       console.error('Error:', error);
       setError(error.message);
@@ -286,7 +254,7 @@ export default function Home() {
                         <img
                           src={`/api/image-proxy?url=${encodeURIComponent(imageUrl)}`}
                           alt="Generated design"
-                          className="w-full h-auto rounded-lg shadow-lg object-contain h-96"
+                          className="w-full h-auto rounded-lg shadow-lg"
                         />
                         {selectedDesign && (
                           <div className="absolute top-2 right-2 bg-black/50 px-2 py-1 rounded text-sm">
@@ -298,7 +266,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Gelato Template Preview */}
+                {/* Shirt Preview - Placeholder for future integration */}
                 <div className="text-center">
                   <h3 className="text-xl font-semibold mb-4">Shirt Preview</h3>
                   {isGenerating ? (
@@ -306,25 +274,9 @@ export default function Home() {
                       <p className="text-gray-500">Loading preview...</p>
                     </div>
                   ) : imageUrl ? (
-                    <div className="relative w-full max-w-2xl mx-auto">
-                      <img
-                        src={`/api/get-mockups?color=${encodeURIComponent(selectedColor.value)}`}
-                        alt="Shirt preview"
-                        className="w-full rounded-lg shadow-lg object-contain h-96"
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <img
-                          src={imageUrl}
-                          alt="Design overlay"
-                          className="w-3/4 h-3/4 object-contain"
-                          style={{ 
-                            mixBlendMode: 'multiply',
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)'
-                          }}
-                        />
+                    <div className="relative">
+                      <div className="w-full h-96 bg-gray-800 rounded-lg flex items-center justify-center">
+                        <p className="text-gray-400">Shirt preview coming soon</p>
                       </div>
                     </div>
                   ) : null}

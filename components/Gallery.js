@@ -33,7 +33,7 @@ export default function Gallery({ onImageSelect }) {
   const fetchDesigns = async () => {
     try {
       const { data, error } = await supabase
-        .from('designs')
+        .from('shirt_designs')
         .select('*')
         .order('created_at', { ascending: false });
 

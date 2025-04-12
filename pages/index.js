@@ -30,34 +30,35 @@ export default function Home() {
 
   const isAdmin = user?.email === ADMIN_EMAIL;
 
-  useEffect(() => {
-    const fetchGenerationCount = async () => {
-      if (!user) return;
-      try {
-        const { data, error } = await supabase
-          .from('user_generations')
-          .select('count')
-          .eq('user_id', user.id)
-          .single();
-
-        if (error) throw error;
-        setGenerationCount(data?.count || 0);
-      } catch (error) {
-        console.error('Error fetching generation count:', error);
+  const fetchGenerationCount = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setError('Not authenticated');
+        return;
       }
-    };
 
-    fetchGenerationCount();
-  }, [user]);
+      const response = await fetch('/api/generate', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch generation count');
+      }
+
+      const data = await response.json();
+      setGenerationCount(data.count);
+    } catch (error) {
+      console.error('Error fetching generation count:', error);
+      setError(error.message);
+    }
+  };
 
   const generateImage = async () => {
-    if (!user) {
-      setError('Please sign in to generate images');
-      return;
-    }
-
-    if (generationCount >= MAX_GENERATIONS && !isAdmin) {
-      setError('You have reached your daily generation limit');
+    if (!prompt.trim()) {
+      setError('Please enter a prompt');
       return;
     }
 
@@ -66,10 +67,16 @@ export default function Home() {
     setImageUrl(null);
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
+
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({ prompt }),
       });
@@ -81,19 +88,9 @@ export default function Home() {
 
       const data = await response.json();
       setImageUrl(data.imageUrl);
-
-      // Update generation count
-      const { error: updateError } = await supabase
-        .from('user_generations')
-        .upsert(
-          { user_id: user.id, count: generationCount + 1 },
-          { onConflict: 'user_id' }
-        );
-
-      if (updateError) throw updateError;
-      setGenerationCount(prev => prev + 1);
+      await fetchGenerationCount();
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error generating image:', error);
       setError(error.message);
     } finally {
       setIsGenerating(false);

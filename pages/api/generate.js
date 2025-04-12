@@ -7,14 +7,17 @@
 
 // Import the OpenAI library (make sure you've installed it: npm install openai)
 import OpenAI from 'openai';
-import { supabase } from '../../lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 
-// Instantiate the OpenAI client.
-// It automatically looks for the OPENAI_API_KEY environment variable.
-// Ensure OPENAI_API_KEY is set in your .env.local file for local development
-// and in your Vercel environment variables for deployment.
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+// Initialize OpenAI client
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY, // apiKey is the default parameter name
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 // The main handler function for the API route
@@ -25,9 +28,27 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { user } = await supabase.auth.getUser();
+    // Get the session from the Authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ error: 'No authorization header' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    // Verify the session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession(token);
+    if (sessionError || !session) {
+      console.error('Session error:', sessionError);
+      return res.status(401).json({ error: 'Invalid session' });
+    }
+
+    const user = session.user;
     if (!user) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      return res.status(401).json({ error: 'No user found in session' });
     }
 
     if (req.method === 'GET') {

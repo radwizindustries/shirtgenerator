@@ -61,7 +61,7 @@ export default async function handler(req, res) {
     const templateId = '5fc7cef1-8fd3-4361-855f-59f41a83cd57'; // T-shirt template ID
     const templateResponse = await fetch(`${GELATO_API_URL}/templates/${templateId}`, {
       headers: {
-        'X-API-KEY': process.env.GELATO_API_KEY,
+        'X-API-KEY': process.env.GELATO_API_KEY.split(':')[0],
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
@@ -73,12 +73,27 @@ export default async function handler(req, res) {
     }
 
     const template = await templateResponse.json();
+    console.log('Template response:', template); // Debug log
 
-    // Create product using template
-    const productResponse = await fetch(`${GELATO_API_URL}/products`, {
+    // Get the variant ID based on the color
+    const targetColor = (color === '#FFFFFF' ? 'white' : 'black');
+    const variant = template.variants?.find(v => 
+      v.attributes?.some(attr => 
+        attr.name === 'color' && 
+        attr.value.toLowerCase() === targetColor
+      )
+    );
+
+    if (!variant) {
+      console.error('Available variants:', template.variants);
+      throw new Error(`Variant not found for the selected color: ${targetColor}`);
+    }
+
+    // Create a product with the design
+    const response = await fetch(`${GELATO_API_URL}/products`, {
       method: 'POST',
       headers: {
-        'X-API-KEY': process.env.GELATO_API_KEY,
+        'X-API-KEY': process.env.GELATO_API_KEY.split(':')[0],
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
@@ -96,12 +111,12 @@ export default async function handler(req, res) {
       })
     });
 
-    if (!productResponse.ok) {
-      const error = await productResponse.json();
+    if (!response.ok) {
+      const error = await response.json();
       throw new Error(error.message || 'Failed to create product');
     }
 
-    const product = await productResponse.json();
+    const product = await response.json();
     return res.status(200).json(product);
   } catch (error) {
     console.error('Error in Gelato API:', error);
